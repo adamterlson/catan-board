@@ -37,6 +37,7 @@ Board.prototype.makeHexGrid = function (radius, tileSize) {
 Board.prototype.draw = function () {
   this.tiles.forEach(function (tile) { 
     tile.draw(this.context); 
+    tile.drawCorners(this.context); 
   }.bind(this));
 };
 
@@ -147,19 +148,28 @@ Tile.prototype.draw = function (context) {
   context.stroke(path);
 };
 
+Tile.prototype.drawCorners = function (context) {
+  let origin = this.drawingOrigin();
+
+  this.corners.forEach(function (point) {
+    let path = new Path2D();
+
+    path.arc(point.x, point.y, 5, 0, 2 * Math.PI, false);
+    context.lineWidth = this.lineWidth;
+    context.strokeStyle = this.strokeStyle;
+    context.stroke(path);
+  }, this);
+
+};
+
 
 let board = new Board('board');
 board.draw();
 
-board.tiles.forEach(function (tile) {
-  console.log(tile.location);
-})
-console.log('a', board.tiles[6]);
 board.validNeighbors(board.tiles[6]).forEach(function (n) {
   n.strokeStyle = '#f00';
   n.draw(board.context);
 });
-
 
 
 
