@@ -16,14 +16,20 @@ function cubeToHex(h) {
 }
 
 function hexToCube(h) {
-  var x = h.q;
-  var z = h.r;
-  var y = -x-z;
+  let x = h.q;
+  let z = h.r;
+  let y = -x-z;
   return {
     x: x,
     y: y,
     z: z
   };
+}
+
+function hex_to_pixel(hex, size) {
+  let x = size * Math.sqrt(3) * (hex.q + hex.r/2)
+  let y = size * 3/2 * hex.r
+  return Point(x, y);
 }
 
 function cube_distance(a, b) {
@@ -38,13 +44,29 @@ let Board = function (canvasId) {
 
   this.hexGrid = this.makeHexGrid(this.radius);
 
-  let tileSize = 100;
-  let boardXOffset = 150;
-  let boardYOffset = 150;
+  let tileSize = 30;
+  let boardXOffset = 300;
+  let boardYOffset = 300;
 
-  for (let i = 0; i < this.radius; i++) {
-    for (let j = 0; j < this.radius; j++) {
-      let tile = new Tile(tileSize);
+  console.log(this.hexGrid);
+
+  for (let i = 0; i < this.hexGrid.length; i++) {
+    var row = this.hexGrid[i];
+    for (let j = 0; j < row.length; j++) {
+      let hex = row[j];
+      if (hex) {
+        let tile = new Tile(tileSize);
+        let point = hex_to_pixel(hex, tileSize);
+
+        console.log(tile);
+
+        point.x += boardXOffset;
+        point.y += boardYOffset;
+
+        tile.move(point);
+        this.tiles.push(tile);
+      }
+      /*let tile = new Tile(tileSize);
       let x = tile.width() * i + boardXOffset;
       let y = tile.height() * 3/4 * j + boardYOffset;
 
@@ -54,7 +76,7 @@ let Board = function (canvasId) {
 
       tile.move({ x: x, y: y });
 
-      this.tiles.push(tile);
+      this.tiles.push(tile);*/
     }
   }
 };
@@ -65,8 +87,8 @@ Board.prototype.makeHexGrid = function (radius) {
   for (let q = -radius; q <= radius; q++) {
     let row = [];
     for (let r = -radius; r <= radius; r++) {
-      var hex = new Hex(q, r);
-      var cube = hexToCube(hex);
+      let hex = new Hex(q, r);
+      let cube = hexToCube(hex);
       if (cube_distance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
         row.push(hex);
       } else {
@@ -75,8 +97,6 @@ Board.prototype.makeHexGrid = function (radius) {
     }
     cols.push(row);
   }
-
-  console.log(cols);
 
   return cols
 }
@@ -123,7 +143,7 @@ Tile.prototype.move = function (point) {
 Tile.prototype.hexCorner = function (i) {
   let angle_deg = 60 * i + 30;
   let angle_rad = Math.PI / 180 * angle_deg;
-  var p = Point(this.origin.x + this.size * Math.cos(angle_rad),
+  let p = Point(this.origin.x + this.size * Math.cos(angle_rad),
                this.origin.y + this.size * Math.sin(angle_rad));
   return p;
 };
