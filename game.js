@@ -4,18 +4,46 @@ let Point = function (x, y) {
   return { x: x, y: y };
 };
 
+let Hex = function (q, r) {
+  return { q: q, r: r };
+};
+
+function cubeToHex(h) {
+  return {
+    q: h.x,
+    r: h.z
+  };
+}
+
+function hexToCube(h) {
+  var x = h.q;
+  var z = h.r;
+  var y = -x-z;
+  return {
+    x: x,
+    y: y,
+    z: z
+  };
+}
+
+function cube_distance(a, b) {
+  return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2;
+}
+
 let Board = function (canvasId) {
   this.canvas = document.getElementById(canvasId);
   this.context = this.canvas.getContext('2d');
-  this.size = 4;
+  this.radius = 3;
   this.tiles = [];
+
+  this.hexGrid = this.makeHexGrid(this.radius);
 
   let tileSize = 100;
   let boardXOffset = 150;
   let boardYOffset = 150;
 
-  for (var i = 0; i < this.size; i++) {
-    for (var j = 0; j < this.size; j++) {
+  for (let i = 0; i < this.radius; i++) {
+    for (let j = 0; j < this.radius; j++) {
       let tile = new Tile(tileSize);
       let x = tile.width() * i + boardXOffset;
       let y = tile.height() * 3/4 * j + boardYOffset;
@@ -31,10 +59,40 @@ let Board = function (canvasId) {
   }
 };
 
+Board.prototype.makeHexGrid = function (radius) {
+  let cols = [];
+
+  for (let q = -radius; q <= radius; q++) {
+    let row = [];
+    for (let r = -radius; r <= radius; r++) {
+      var hex = new Hex(q, r);
+      var cube = hexToCube(hex);
+      if (cube_distance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
+        row.push(hex);
+      } else {
+        row.push(null);
+      }
+    }
+    cols.push(row);
+  }
+
+  console.log(cols);
+
+  return cols
+}
+
 Board.prototype.draw = function () {
   this.tiles.forEach(function (tile) { 
     tile.draw(this.context); 
   }.bind(this));
+};
+
+Board.prototype.firstColumn = function (row) {
+  return -this.radius - Math.min(0, row)
+},
+
+Board.prototype.getCoord = function (q, r) {
+
 };
 
 let Tile = function (size) {
@@ -67,7 +125,6 @@ Tile.prototype.hexCorner = function (i) {
   let angle_rad = Math.PI / 180 * angle_deg;
   var p = Point(this.origin.x + this.size * Math.cos(angle_rad),
                this.origin.y + this.size * Math.sin(angle_rad));
-  console.log(p);
   return p;
 };
 
