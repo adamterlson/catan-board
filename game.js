@@ -1,14 +1,24 @@
 'use strict';
 
+var cornerMap = {
+  N: { q: 0, r: 0, index: 5, neighborCornerKey: 'N' },
+  NE: { q: +1, r: -1, index: 6, neighborCornerKey: 'S' },
+  SE: { q: 0, r: +1, index: 1, neighborCornerKey: 'N' },
+  S: { q: 0, r: 0, index: 2, neighborCornerKey: 'S' },
+  SW: { q: -1, r: +1, index: 3, neighborCornerKey: 'N' },
+  NW: { q: 0, r: -1, index: 4, neighborCornerKey: 'S' }
+};
+
 let Board = function (canvasId) {
   this.canvas = document.getElementById(canvasId);
   this.context = this.canvas.getContext('2d');
   this.context.translate(this.canvas.width / 2, this.canvas.height / 2);
 
-  this.radius = 3;
+  this.radius = 1;
   this.tiles = [];
 
   this.hexGrid = this.makeHexGrid(this.radius);
+  this.assignCorners();
 };
 
 Board.prototype.makeHexGrid = function (radius, tileSize) {
@@ -37,7 +47,6 @@ Board.prototype.makeHexGrid = function (radius, tileSize) {
 Board.prototype.draw = function () {
   this.tiles.forEach(function (tile) { 
     tile.draw(this.context); 
-    tile.drawCorners(this.context); 
   }.bind(this));
 };
 
@@ -81,15 +90,51 @@ Board.prototype.validNeighbors = function (tile) {
     .filter(function (tile) { return tile != undefined; });
 };
 
+Board.prototype.assignCorners = function () {
+  this.tiles.forEach(function (tile) {
+    Object.keys(tile.corners).forEach(function (direction) {
+      var coordTranslate = cornerMap[direction];
+      var neighborCoord = hexAdd(coordTranslate, tile.location);
+      var neighborTile = this.getTileByHex(neighborCoord);
+      if (neighborTile && neighborTile !== tile) {
+        tile.corners[direction] = neighborTile.corners[coordTranslate.neighborCornerKey];
+        tile.corners[direction].tiles.push(tile);
+      } else if (!tile.corners[direction]) {
+        var corner = new Corner();
+        corner.tiles.push(tile);
+
+        tile.corners[direction] = corner;
+      }
+    }, this);
+
+    console.log(tile);
+  }, this);
+};
+
+let Corner = function () {
+  this.tiles = [];
+};
+
 
 let Tile = function (hex) {
   this.size = 30;
   this.lineWidth = 2;
   this.location = hex;
   this.strokeStyle = '#666';
-  this.corners = [];
 
-  this.makeCorners();
+  var north = new Corner();
+  north.tiles.push(this);
+  var south = new Corner();
+  south.tiles.push(this);
+
+  this.corners = {
+    N: north,
+    NE: null,
+    SE: null,
+    S: south,
+    SW: null,
+    NW: null
+  };
 };
 
 Tile.prototype.width = function () {
@@ -102,15 +147,15 @@ Tile.prototype.height = function () {
 
 Tile.prototype.moveHex = function (hex) {
   this.location = hex;
-
-  this.makeCorners();
 };
 
-Tile.prototype.makeCorners = function () {
-  this.corners = [];
-  for (let i = 0; i < 6; i++) {
-    this.corners.push(this.hexCorner(i));
-  }
+Tile.prototype.makeCornerPoints = function () {
+  return Object.keys(this.corners).map(function (key) {
+    var corner = this.corners[key];
+    var i = cornerMap[key].index;
+
+    return this.hexCorner(i);
+  }, this);
 };
 
 Tile.prototype.hexCorner = function (i) {
@@ -132,11 +177,14 @@ Tile.prototype.drawingOrigin = function () {
 };
 
 Tile.prototype.draw = function (context) {
+  var corners = this.makeCornerPoints();
+  this.drawCorners(context, corners);
+
   let origin = this.drawingOrigin();
 
   let path = new Path2D();
-  path.moveTo(this.corners[0].x, this.corners[0].y);
-  this.corners.forEach(function (point) {
+  path.moveTo(corners[0].x, corners[0].y);
+  corners.forEach(function (point) {
     path.lineTo(point.x, point.y);
   });
 
@@ -148,10 +196,10 @@ Tile.prototype.draw = function (context) {
   context.stroke(path);
 };
 
-Tile.prototype.drawCorners = function (context) {
+Tile.prototype.drawCorners = function (context, corners) {
   let origin = this.drawingOrigin();
 
-  this.corners.forEach(function (point) {
+  corners.forEach(function (point) {
     let path = new Path2D();
 
     path.arc(point.x, point.y, 5, 0, 2 * Math.PI, false);
@@ -168,8 +216,9 @@ board.draw();
 
 board.validNeighbors(board.tiles[6]).forEach(function (n) {
   n.strokeStyle = '#f00';
-  n.draw(board.context);
 });
+
+board.draw();
 
 
 
