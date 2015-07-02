@@ -19,7 +19,7 @@ Board.prototype.makeHexGrid = function (radius, tileSize) {
     for (let r = -radius; r <= radius; r++) {
       let hex = new Hex(q, r);
       let cube = hexToCube(hex);
-      if (cube_distance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
+      if (cubeDistance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
         let tile = new Tile(hex);
 
         row.push(tile);
@@ -57,7 +57,7 @@ Board.prototype.cubeNeighbors = function (tile) {
   let location = tile.location;
 
   return directions.map(function (direction) {
-    return cube_add(hexToCube(location), directions[direction]);
+    return cubeAdd(hexToCube(location), directions[direction]);
   });
 };
 
@@ -69,7 +69,7 @@ Board.prototype.hexNeighbors = function (tile) {
   let location = tile.location;
 
   return directions.map(function (direction) { 
-    return hex_add(location, direction); 
+    return hexAdd(location, direction); 
   });
 };
 
@@ -114,7 +114,7 @@ Tile.prototype.makeCorners = function () {
 };
 
 Tile.prototype.hexCorner = function (i) {
-  let origin = hex_to_pixel(this.location, this.size);
+  let origin = hexToPixel(this.location, this.size);
   let angle_deg = 60 * i + 30;
   let angle_rad = Math.PI / 180 * angle_deg;
   let p = Point(origin.x + this.size * Math.cos(angle_rad),
@@ -123,7 +123,7 @@ Tile.prototype.hexCorner = function (i) {
 };
 
 Tile.prototype.drawingOrigin = function () {
-  let origin = hex_to_pixel(this.location, this.size);
+  let origin = hexToPixel(this.location, this.size);
 
   return {
     x: origin.x + this.lineWidth/2,
@@ -209,28 +209,28 @@ function hexToCube(h) {
   return Cube(x, y, z);
 }
 
+function hexToPixel(h, size) {
+  if (!h || !size) {
+    throw new Error('Need hex and size');
+  }
+
+  let x = size * Math.sqrt(3) * (h.q + h.r/2)
+  let y = size * 3/2 * h.r
+  return Point(x, y);
+}
+
 /**
  * Util Functions
  */
 
-function hex_to_pixel(hex, size) {
-  if (!hex || !size) {
-    throw new Error('Need hex and size');
-  }
-
-  let x = size * Math.sqrt(3) * (hex.q + hex.r/2)
-  let y = size * 3/2 * hex.r
-  return Point(x, y);
-}
-
-function cube_distance(a, b) {
+function cubeDistance(a, b) {
   return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2;
 }
 
-function cube_add(a, b) {
+function cubeAdd(a, b) {
   return Cube(a.x + b.x, a.y + b.y, a.z + b.z);
 }
 
-function hex_add(a, b) {
+function hexAdd(a, b) {
   return Hex(a.q + b.q, a.r + b.r);
 }
