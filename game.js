@@ -41,47 +41,23 @@ let Board = function (canvasId) {
   this.context = this.canvas.getContext('2d');
   this.radius = 3;
   this.tiles = [];
+  this.offset = { x: 300, y: 300 };
 
   this.hexGrid = this.makeHexGrid(this.radius);
+};
 
-  let tileSize = 30;
-  let boardXOffset = 300;
-  let boardYOffset = 300;
-
-  console.log(this.hexGrid);
-
-  for (let i = 0; i < this.hexGrid.length; i++) {
-    var row = this.hexGrid[i];
-    for (let j = 0; j < row.length; j++) {
-      let hex = row[j];
-      if (hex) {
-        let tile = new Tile(tileSize);
-        let point = hex_to_pixel(hex, tileSize);
-
-        console.log(tile);
-
-        point.x += boardXOffset;
-        point.y += boardYOffset;
-
-        tile.move(point);
-        this.tiles.push(tile);
+Board.prototype.forEachTile = function (fn) {
+  for (let q = 0; q < this.hexGrid.length; q++) {
+    let row = this.hexGrid[q];
+    for (let r = 0; r < row.length; r++) {
+      if (row[r]) {
+        fn(row[r]);
       }
-      /*let tile = new Tile(tileSize);
-      let x = tile.width() * i + boardXOffset;
-      let y = tile.height() * 3/4 * j + boardYOffset;
-
-      if (j % 2 === 0) {
-        x += tile.width() / 2;
-      }
-
-      tile.move({ x: x, y: y });
-
-      this.tiles.push(tile);*/
     }
   }
 };
 
-Board.prototype.makeHexGrid = function (radius) {
+Board.prototype.makeHexGrid = function (radius, tileSize) {
   let cols = [];
 
   for (let q = -radius; q <= radius; q++) {
@@ -90,7 +66,12 @@ Board.prototype.makeHexGrid = function (radius) {
       let hex = new Hex(q, r);
       let cube = hexToCube(hex);
       if (cube_distance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
-        row.push(hex);
+        let tile = new Tile();
+
+        tile.moveHex(hex);
+        tile.translate(this.offset);
+
+        row.push(tile);
       } else {
         row.push(null);
       }
@@ -99,10 +80,10 @@ Board.prototype.makeHexGrid = function (radius) {
   }
 
   return cols
-}
+};
 
 Board.prototype.draw = function () {
-  this.tiles.forEach(function (tile) { 
+  this.forEachTile(function (tile) { 
     tile.draw(this.context); 
   }.bind(this));
 };
@@ -115,12 +96,13 @@ Board.prototype.getCoord = function (q, r) {
 
 };
 
-let Tile = function (size) {
-  this.size = size;
-  this.lineWidth = 10;
-  this.corners = [];
 
-  this.move({ x: 0, y: 0 });
+let Tile = function () {
+  this.size = 30;
+  this.lineWidth = 10;
+  this.origin = { x: 0, y: 0 };
+
+  this.makeCorners();
 };
 
 Tile.prototype.width = function () {
@@ -134,6 +116,21 @@ Tile.prototype.height = function () {
 Tile.prototype.move = function (point) {
   this.origin = point;
 
+  this.makeCorners();
+};
+
+Tile.prototype.moveHex = function (hex) {
+  return this.move(hex_to_pixel(hex, this.size));
+};
+
+Tile.prototype.translate = function (offset) {
+  this.move({
+    x: this.origin.x + offset.x,
+    y: this.origin.y + offset.y
+  });
+};
+
+Tile.prototype.makeCorners = function () {
   this.corners = [];
   for (let i = 0; i < 6; i++) {
     this.corners.push(this.hexCorner(i));
@@ -177,24 +174,6 @@ Tile.prototype.draw = function (context) {
   context.strokeStyle = '#666666';
 
   context.stroke(path);
-
-  /*
-  let origin = this.drawingOrigin();
-  let size = this.drawingSize();
-
-  let path = new Path2D();
-
-  path.moveTo(origin.x, origin.y);
-  path.lineTo(origin.x + size, origin.y);
-  path.lineTo(origin.x + size, origin.y + size);
-  path.lineTo(origin.x, origin.y + size);
-  path.closePath();
-
-  context.lineWidth = this.lineWidth;
-  
-  context.strokeStyle = '#666666';
-
-  context.stroke(path);*/
 };
 
 
