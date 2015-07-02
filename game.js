@@ -40,12 +40,53 @@ Board.prototype.draw = function () {
   }.bind(this));
 };
 
+Board.prototype.getTileByHex = function (hex) {
+  var res = this.tiles.filter(function (tile) {
+    return tile.location.q === hex.q && tile.location.r === hex.r;
+  });
+
+  return res.length ? res[0] : null;
+};
+
+Board.prototype.cubeNeighbors = function (tile) {
+  let directions = [
+     Cube(+1, -1,  0), Cube(+1,  0, -1), Cube(0, +1, -1),
+     Cube(-1, +1,  0), Cube(-1,  0, +1), Cube(0, -1, +1)
+  ];
+  let location = tile.location;
+
+  return directions.map(function (direction) {
+    return cube_add(hexToCube(location), directions[direction]);
+  });
+};
+
+Board.prototype.hexNeighbors = function (tile) {
+  let directions = [
+    Hex(+1,  0), Hex(+1, -1), Hex(0, -1),
+    Hex(-1,  0), Hex(-1, +1), Hex(0, +1)
+  ];
+  let location = tile.location;
+
+  return directions.map(function (direction) { 
+    return hex_add(location, direction); 
+  });
+};
+
+Board.prototype.validNeighbors = function (tile) {
+  return this.hexNeighbors(tile)
+    .map(function (hex) {
+      return this.getTileByHex(hex);
+    }.bind(this))
+    .filter(function (tile) { return tile != undefined; });
+};
+
 
 let Tile = function (hex) {
   this.size = 30;
   this.lineWidth = 2;
   this.location = hex;
   this.strokeStyle = '#666';
+  this.corners = [];
 
   this.makeCorners();
 };
@@ -80,24 +121,6 @@ Tile.prototype.hexCorner = function (i) {
   return p;
 };
 
-Tile.prototype.cubeNeighbors = function (direction) {
-  var directions = [
-     Cube(+1, -1,  0), Cube(+1,  0, -1), Cube(0, +1, -1),
-     Cube(-1, +1,  0), Cube(-1,  0, +1), Cube(0, -1, +1)
-  ];
-
-  return cube_add(hexToCube(this.location), directions[direction]);
-};
-
-Tile.prototype.hexNeighbors = function (direction) {
-  var directions = [
-    Hex(+1,  0), Hex(+1, -1), Hex(0, -1),
-    Hex(-1,  0), Hex(-1, +1), Hex(0, +1)
-  ];
-
-  return hex_add(this.location, directions[direction]);
-};
-
 Tile.prototype.drawingOrigin = function () {
   let origin = hex_to_pixel(this.location, this.size);
 
@@ -127,6 +150,15 @@ Tile.prototype.draw = function (context) {
 
 let board = new Board('board');
 board.draw();
+
+board.tiles.forEach(function (tile) {
+  console.log(tile.location);
+})
+console.log('a', board.tiles[6]);
+board.validNeighbors(board.tiles[6]).forEach(function (n) {
+  n.strokeStyle = '#f00';
+  n.draw(board.context);
+});
 
 
 
