@@ -1,47 +1,11 @@
 'use strict';
 
-let Point = function (x, y) {
-  return { x: x, y: y };
-};
-
-let Hex = function (q, r) {
-  return { q: q, r: r };
-};
-
-function cubeToHex(h) {
-  return {
-    q: h.x,
-    r: h.z
-  };
-}
-
-function hexToCube(h) {
-  let x = h.q;
-  let z = h.r;
-  let y = -x-z;
-  return {
-    x: x,
-    y: y,
-    z: z
-  };
-}
-
-function hex_to_pixel(hex, size) {
-  let x = size * Math.sqrt(3) * (hex.q + hex.r/2)
-  let y = size * 3/2 * hex.r
-  return Point(x, y);
-}
-
-function cube_distance(a, b) {
-  return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2;
-}
-
 let Board = function (canvasId) {
   this.canvas = document.getElementById(canvasId);
   this.context = this.canvas.getContext('2d');
   this.radius = 3;
   this.tiles = [];
-  this.offset = { x: 300, y: 300 };
+  this.offset = { q: 2, r: 6 };
 
   this.hexGrid = this.makeHexGrid(this.radius);
 };
@@ -66,9 +30,8 @@ Board.prototype.makeHexGrid = function (radius, tileSize) {
       let hex = new Hex(q, r);
       let cube = hexToCube(hex);
       if (cube_distance(cube, {x: 0, y: 0, z: 0}) <= this.radius) {
-        let tile = new Tile();
+        let tile = new Tile(hex);
 
-        tile.moveHex(hex);
         tile.translate(this.offset);
 
         row.push(tile);
@@ -88,19 +51,11 @@ Board.prototype.draw = function () {
   }.bind(this));
 };
 
-Board.prototype.firstColumn = function (row) {
-  return -this.radius - Math.min(0, row)
-},
 
-Board.prototype.getCoord = function (q, r) {
-
-};
-
-
-let Tile = function () {
+let Tile = function (hex) {
   this.size = 30;
-  this.lineWidth = 10;
-  this.origin = { x: 0, y: 0 };
+  this.lineWidth = 2;
+  this.location = hex;
 
   this.makeCorners();
 };
@@ -113,21 +68,14 @@ Tile.prototype.height = function () {
   return this.size * 2;
 };
 
-Tile.prototype.move = function (point) {
-  this.origin = point;
+Tile.prototype.moveHex = function (hex) {
+  this.location = hex;
 
   this.makeCorners();
 };
 
-Tile.prototype.moveHex = function (hex) {
-  return this.move(hex_to_pixel(hex, this.size));
-};
-
 Tile.prototype.translate = function (offset) {
-  this.move({
-    x: this.origin.x + offset.x,
-    y: this.origin.y + offset.y
-  });
+  this.moveHex(Hex(this.location.q + offset.q, this.location.r + offset.r));
 };
 
 Tile.prototype.makeCorners = function () {
@@ -138,17 +86,30 @@ Tile.prototype.makeCorners = function () {
 };
 
 Tile.prototype.hexCorner = function (i) {
+  let origin = hex_to_pixel(this.location, this.size);
+  console.log(this.location);
   let angle_deg = 60 * i + 30;
   let angle_rad = Math.PI / 180 * angle_deg;
-  let p = Point(this.origin.x + this.size * Math.cos(angle_rad),
-               this.origin.y + this.size * Math.sin(angle_rad));
+  let p = Point(origin.x + this.size * Math.cos(angle_rad),
+               origin.y + this.size * Math.sin(angle_rad));
   return p;
 };
 
+Tile.prototype.neighbors = function (direction) {
+  var directions = [
+     Cube(+1, -1,  0), Cube(+1,  0, -1), Cube( 0, +1, -1),
+     Cube(-1, +1,  0), Cube(-1,  0, +1), Cube( 0, -1, +1)
+  ];
+
+  return cube_add(this.location().hex, directions[direction]);
+};
+
 Tile.prototype.drawingOrigin = function () {
+  let origin = hex_to_pixel(this.location, this.size);
+
   return {
-    x: this.origin.x + this.lineWidth/2,
-    y: this.origin.y + this.lineWidth/2
+    x: origin.x + this.lineWidth/2,
+    y: origin.y + this.lineWidth/2
   };
 };
 
@@ -161,7 +122,6 @@ Tile.prototype.draw = function (context) {
   let size = this.drawingSize();
 
   let path = new Path2D();
-
   path.moveTo(this.corners[0].x, this.corners[0].y);
   this.corners.forEach(function (point) {
     path.lineTo(point.x, point.y);
@@ -179,3 +139,60 @@ Tile.prototype.draw = function (context) {
 
 let board = new Board('board');
 board.draw();
+
+
+
+
+/**
+ * Coord Types
+ */
+
+function Point(x, y) {
+  return { x: x, y: y };
+};
+
+function Hex(q, r) {
+  return { q: q, r: r };
+};
+
+function Cube(x, y, z) {
+  return {
+    x: x,
+    y: y,
+    z: z
+  };
+};
+
+/**
+ * Type Conversions
+ */
+
+function cubeToHex(h) {
+  return Hex(h.x, h.z);
+}
+
+function hexToCube(h) {
+  let x = h.q;
+  let z = h.r;
+  let y = -x-z;
+
+  return Cube(x, y, z);
+}
+
+/**
+ * Util Functions
+ */
+
+function hex_to_pixel(hex, size) {
+  if (!hex || !size) {
+    throw new Error('Need hex and size');
+  }
+
+  let x = size * Math.sqrt(3) * (hex.q + hex.r/2)
+  let y = size * 3/2 * hex.r
+  return Point(x, y);
+}
+
+function cube_distance(a, b) {
+  return (Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z)) / 2;
+}
