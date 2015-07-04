@@ -1,0 +1,14 @@
+.tile {
+  fill: blue;
+}
+
+.border {
+  fill: none;
+  stroke: red;
+}
+
+.node {
+  z-index: 1000;
+  fill: green;
+  r: 5;
+}

@@ -5,7 +5,7 @@ var source = require('vinyl-source-stream');
 var gulp = require('gulp');
 
 var b = watchify(browserify({
-  entries: './lib/game.js',
+  entries: './lib/main.js',
   debug: true
 }));
 
