@@ -1,7 +1,12 @@
 text {
   text-anchor: middle;
   font-family: helvetica;
-  font-size: 12pt;
+  font-size: 16pt;
+  fill: white;
+  stroke: black;
+  stroke-opacity: 70%;
+  stroke-width: 1px;
+  font-weight: bold;
 }
 
 .tile {
@@ -17,7 +22,7 @@ text {
 }
 
 .tile.lumber {
-  fill: #0d4925;
+  fill: #326031;
 }
 
 .tile.brick {
@@ -34,11 +39,12 @@ text {
 
 .border {
   fill: none;
-  stroke: red;
+  stroke: black;
 }
 
 .node {
   z-index: 1000;
-  fill: green;
+  fill: white;
+  stroke: black;
   r: 5;
 }
