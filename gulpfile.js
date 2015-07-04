@@ -1,13 +1,22 @@
+var babelify = require('babelify');
+var browserify = require('browserify');
+var watchify = require('watchify');
+var source = require('vinyl-source-stream');
 var gulp = require('gulp');
-var babel = require('gulp-babel');
-var watch = require('gulp-watch');
-var sourcemaps = require('gulp-sourcemaps');
 
-gulp.task('default', function () {
-  return gulp.src('lib/*.js')
-    .pipe(watch('lib/*.js'))
-    .pipe(sourcemaps.init({ loadMaps: true }))
-    .pipe(babel())
-    .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest('dist'));
-});
+var b = watchify(browserify({
+  entries: './lib/game.js',
+  debug: true
+}));
+
+b.on('update', bundle);
+
+function bundle() {
+    return b
+    .transform(babelify)
+    .bundle()
+    .pipe(source('main.js'))
+    .pipe(gulp.dest('./dist'));
+}
+
+gulp.task('default', bundle);
