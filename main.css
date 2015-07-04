@@ -1,5 +1,35 @@
+text {
+  text-anchor: middle;
+  font-family: helvetica;
+  font-size: 12pt;
+}
+
 .tile {
   fill: blue;
+}
+
+.tile.desert {
+  fill: #d3ad7e;
+}
+
+.tile.sheep {
+  fill: #95ba12;
+}
+
+.tile.lumber {
+  fill: #0d4925;
+}
+
+.tile.brick {
+  fill: #a34b35;
+}
+
+.tile.stone {
+  fill: #79868f;
+}
+
+.tile.wheat {
+  fill: #f3cd00;
 }
 
 .border {
