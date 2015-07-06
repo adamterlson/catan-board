@@ -1,0 +1,131 @@
+$player-blue: #3f629a;
+$player-red: #ac1a1a;
+$player-yellow: #e0b904;
+$player-green: #28741c;
+
+$resource-sheep: #95ba12;
+$resource-lumber: #326031;
+$resource-brick: #a34b35;
+$resource-stone: #79868f;
+$resource-wheat: #f3cd00;
+
+
+@mixin player-colors($prop) {
+  &.blue {
+    #{$prop}: $player-blue;
+  }
+  &.red {
+    #{$prop}: $player-red;
+  }
+  &.yellow {
+    #{$prop}: $player-yellow;
+  }
+  &.green {
+    #{$prop}: $player-green;
+  }
+}
+
+@mixin resource-colors($prop) {
+  &.sheep {
+    #{$prop}: $resource-sheep;
+  }
+  &.lumber {
+    #{$prop}: $resource-lumber;
+  }
+  &.brick {
+    #{$prop}: $resource-brick;
+  }
+  &.stone {
+    #{$prop}: $resource-stone;
+  }
+  &.wheat {
+    #{$prop}: $resource-wheat;
+  }
+}
+
+
+
+text {
+  text-anchor: middle;
+  font-family: helvetica;
+  fill: white;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+.tile {
+  font-size: 2em;
+  font-weight: bold;
+  stroke: black;
+
+  &.ocean {
+    fill: blue;
+    stroke: none;
+  }
+
+  &.desert {
+    fill: #d3ad7e;
+  }
+
+  @include resource-colors('fill');
+}
+
+.border {
+  &.background {
+    stroke-width: 11px;
+    stroke: white;
+  }
+
+  &.owned {
+    stroke-width: 8px;
+  }
+
+  @include player-colors('stroke');
+}
+
+
+.port {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2px;
+  font-size: 1.5em;
+
+  @include resource-colors('stroke');
+
+  circle {
+    fill: #fff;
+    r: 25;
+    @include resource-colors('fill');
+  }
+}
+
+.node {
+  z-index: 1000;
+  fill: white;
+  stroke: black;
+  stroke-width: 1px;
+  r: 5;
+
+  &.owned {
+    stroke: white;
+    stroke-width: 2px;
+    r: 10;
+  }
+
+  &.level1 {
+  }
+
+  &.level2 {
+    r: 20;
+  }
+
+  @include player-colors('fill');
+}
+
+.robber {
+  fill: #222;
+  fill-opacity: 75%;
+  stroke: white;
+  stroke-width: 2px;
+  r: 20;
+}
